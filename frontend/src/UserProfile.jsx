@@ -19,29 +19,29 @@ const UserProfile = () => {
             return;
         }
 
-        // Fetch user details with the token
-        axios.get(`http://localhost:5000/api/users/${userId}`)
-            .then((response) => {
-                setUser(response.data);
-                setEditedUser(response.data);
-                setLoading(false);
-            })
-            .catch((err) => {
-                setError(err.message);
-                setLoading(false);
-            });
+        const fetchData = async () => {
+            try {
+                // Fetch user details
+                const userResponse = await axios.get(`http://localhost:5000/api/users/${userId}`, {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+                setUser(userResponse.data);
+                setEditedUser(userResponse.data);
 
-        // Fetch user bookings with the token
-        axios.get(`http://localhost:5000/api/bookings`, {
-            headers: { Authorization: `Bearer ${token}` }
-        })
-            .then((response) => {
-                setBookings(response.data);
-            })
-            .catch((err) => {
-                console.error("Error fetching bookings:", err);
-                setError(err.message);
-            });
+                // Fetch user bookings
+                const bookingsResponse = await axios.get(`http://localhost:5000/api/bookings`, {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+                setBookings(bookingsResponse.data);
+            } catch (err) {
+                console.error("Error:", err);
+                setError(err.response?.data?.message || "Authorization failed. Please log in again.");
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchData();
     }, []);
 
     const handleEditClick = () => {
@@ -60,28 +60,27 @@ const UserProfile = () => {
         });
     };
 
-    const handleSave = () => {
-        const userId = sessionStorage.getItem("userId");
-        const token = sessionStorage.getItem("token");
+    const handleSave = async () => {
+        
 
-        axios.put(`http://localhost:5000/api/users/${userId}`, editedUser, {
-            headers: { Authorization: `Bearer ${token}` }
-        })
-            .then((response) => {
-                setUser(response.data);
-                setIsEditing(false);
-                alert("Profile updated successfully!");
-            })
-            .catch((err) => {
-                alert("Error updating profile: " + err.message);
+        try {
+            const response = await axios.put(`http://localhost:5000/api/users/${userId}`, editedUser, {
+                headers: { Authorization: `Bearer ${token}` }
             });
+            setUser(response.data);
+            setIsEditing(false);
+            alert("Profile updated successfully!");
+        } catch (err) {
+            console.error("Update Error:", err);
+            alert("Error updating profile: " + err.response?.data?.message || err.message);
+        }
     };
 
-    if (loading) return <p>Loading user data...</p>;
-    if (error) return <p>Error: {error}</p>;
+    if (loading) return <p className="text-center">Loading user data...</p>;
+    if (error) return <p className="text-red-500 text-center">{error}</p>;
 
     return (
-        <div className="p-6">
+        <div className="p-6 max-w-4xl mx-auto">
             <h2 className="text-2xl font-bold mb-4">User Profile</h2>
             <div className="border p-4 rounded-lg shadow flex items-center gap-4">
                 <img src={user.profilePic} alt="Profile" className="w-20 h-20 rounded-full border" />
@@ -96,7 +95,7 @@ const UserProfile = () => {
                             className="border rounded px-2 py-1"
                         />
                         <input
-                            type="text"
+                            type="email"
                             name="email"
                             value={editedUser.email}
                             onChange={handleInputChange}
@@ -134,12 +133,12 @@ const UserProfile = () => {
                             />
                             <p><strong>{booking.hotelName}</strong></p>
                             <p>{booking.roomType}</p>
-                            <p>{booking.checkIn} to {booking.checkOut}</p>
-                            <p>{booking.price}</p>
+                            <p>{new Date(booking.checkIn).toLocaleDateString()} to {new Date(booking.checkOut).toLocaleDateString()}</p>
+                            <p className="text-green-600 font-bold">₹{booking.price}</p>
                         </div>
                     ))
                 ) : (
-                    <p>No bookings found.</p>
+                    <p className="text-center">No bookings found.</p>
                 )}
             </div>
         </div>

@@ -9,6 +9,8 @@ export const verifyUser = (req, res, next) => {
     }
   };
   
+// 📌 Verify Hotel Owner Middleware
+// verifyToken middleware: extracts token and attaches user info to req.user
 export const verifyToken = (req, res, next) => {
   const token = req.cookies.access_token;
   if (!token) {

@@ -14,18 +14,13 @@ const Login = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
 
-        const loginData = {
-            email: "test@example.com",
-            password: "password123"
-        };
-
         try {
             const response = await fetch('http://localhost:5000/api/auth/login', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify(loginData)
+                body: JSON.stringify(formData)
             });
 
             if (!response.ok) {
